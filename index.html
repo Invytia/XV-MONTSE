@@ -29,12 +29,22 @@
             overflow-x: hidden;
             font-family: var(--fuente-texto);
             color: var(--verde-sofisticado);
-            /* Fondo fijo para toda la invitación CORREGIDO */
-            background: url('assets/fondo2.jpg') center/cover fixed no-repeat;
-            background-color: var(--crema); /* Color de respaldo */
+            background-color: var(--crema); /* Color base */
         }
 
-        /* Contenedor de Glitter Sutil (Estará sobre el fondo fotográfico) */
+        /* SOLUCIÓN AL ZOOM DEL FONDO (Capa independiente y fija) */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh; /* Se ajusta solo al alto de la pantalla visible */
+            background: url('assets/fondo2.jpg') center/cover no-repeat;
+            z-index: -2; /* Mantiene la imagen siempre al fondo */
+        }
+
+        /* Contenedor de Glitter Sutil */
         #particles-js { position: fixed; width: 100%; height: 100vh; top: 0; left: 0; z-index: -1; pointer-events: none; }
 
         /* Estilos Glassmorphism Principal con ligero bokeh */
@@ -64,7 +74,7 @@
         /* --- SOBRE INICIAL --- */
         #envelope-screen { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh; 
-            /* Fondo fotográfico para el sobre CORREGIDO */
+            /* Fondo fotográfico para el sobre */
             background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('assets/fondo.jpg') center/cover no-repeat; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             z-index: 9999; transition: opacity 1.5s ease; 
