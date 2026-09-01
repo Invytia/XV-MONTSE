@@ -399,22 +399,26 @@
                 </div>
             </section>
 
-            <!-- CONFIRMACIÓN WHATSAPP -->
+            <!-- CONFIRMACIÓN WHATSAPP + SISTEMA DE PASES -->
             <section>
                 <div class="glass-card reveal-scale" style="padding: 40px 20px;">
                     <h2>¿Me acompañas?</h2>
-                    <p style="margin-bottom: 25px; font-size: 1rem; font-weight: 500;">Confirma tu asistencia directamente por WhatsApp</p>
                     
                     <div style="max-width: 450px; margin: 0 auto;">
+                        
+                        <!-- UI DEL PASE (Se oculta por defecto) -->
+                        <div id="passBadge" style="display: none; background: rgba(255, 255, 255, 0.7); border: 1px solid var(--dorado); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(193,163,127,0.2);">
+                            <p style="font-family: var(--fuente-titulos); font-size: 1.2rem; color: var(--verde-sofisticado); margin-bottom: 5px;"><i class="fa-solid fa-ticket" style="color: var(--dorado);"></i> Pase de Recepción</p>
+                            <p style="font-weight: 600; color: var(--malva); font-size: 1rem;">Tienes <span id="passCountDisplay" style="font-size: 1.2rem;">0</span> pases asignados</p>
+                        </div>
+                        
+                        <p style="margin-bottom: 25px; font-size: 1rem; font-weight: 500;">Confirma tu asistencia directamente por WhatsApp</p>
+
                         <input type="text" id="guestName" placeholder="Tu nombre completo">
                         
-                        <select id="guestCount">
+                        <!-- SELECTOR DE PASES (Oculto por defecto y se llena dinámicamente) -->
+                        <select id="guestCount" style="display: none;">
                             <option value="" disabled selected>Número de acompañantes</option>
-                            <option value="1">1 Persona</option>
-                            <option value="2">2 Personas</option>
-                            <option value="3">3 Personas</option>
-                            <option value="4">4 Personas</option>
-                            <option value="5">5 Personas</option>
                         </select>
 
                         <select id="attendance">
@@ -449,6 +453,48 @@
     </div>
 
     <script>
+        // Lógica de Pases INVYTIA (Se ejecuta al cargar)
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pasesStr = urlParams.get('p');
+            const guestCountSelect = document.getElementById('guestCount');
+            const passBadge = document.getElementById('passBadge');
+            const passCountDisplay = document.getElementById('passCountDisplay');
+
+            if (pasesStr && !isNaN(pasesStr) && parseInt(pasesStr) > 0) {
+                const maxPases = parseInt(pasesStr);
+                
+                passBadge.style.display = 'block';
+                guestCountSelect.style.display = 'block';
+                passCountDisplay.innerText = maxPases;
+
+                // Construimos el selector dinámicamente hasta el máximo permitido
+                guestCountSelect.innerHTML = '<option value="" disabled selected>Número de personas que asisten</option>';
+                for (let i = 1; i <= maxPases; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.text = i === 1 ? '1 Persona' : `${i} Personas`;
+                    guestCountSelect.appendChild(option);
+                }
+            } else {
+                passBadge.style.display = 'none';
+                guestCountSelect.style.display = 'none';
+            }
+        });
+
+        // Ocultar selector de personas si el invitado indica que no puede asistir
+        document.getElementById('attendance').addEventListener('change', function() {
+            const guestCountSelect = document.getElementById('guestCount');
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasPases = urlParams.has('p') && parseInt(urlParams.get('p')) > 0;
+            
+            if (this.value === 'No podré asistir') {
+                guestCountSelect.style.display = 'none';
+            } else if (hasPases) {
+                guestCountSelect.style.display = 'block';
+            }
+        });
+
         // 1. Lógica del Sobre y Autoplay de Música
         const envelope = document.getElementById('envelope');
         envelope.addEventListener('click', () => {
@@ -489,7 +535,7 @@
             }
         }
 
-        // 2. WhatsApp Dinámico
+        // 2. WhatsApp Dinámico (Adaptado para los Pases)
         function sendWhatsApp(isWish) {
             const phone = "527775399885";
             let text = "";
@@ -504,14 +550,29 @@
                 text = `¡Hola Montse! Soy ${name}. Quería dejarte este mensaje por tus XV años: ${message} 🎉`;
             } else {
                 const name = document.getElementById('guestName').value;
-                const count = document.getElementById('guestCount').value;
                 const attend = document.getElementById('attendance').value;
                 
-                if(!name || !count) {
-                    alert("Por favor completa tu nombre y número de acompañantes.");
+                if(!name) {
+                    alert("Por favor completa tu nombre completo.");
                     return;
                 }
-                text = `¡Hola! Soy ${name}. Confirmo que ${attend} a los XV años de Montse. Seremos ${count} personas en total.`;
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasPases = urlParams.has('p') && !isNaN(urlParams.get('p')) && parseInt(urlParams.get('p')) > 0;
+                
+                if (attend === "No podré asistir") {
+                    text = `¡Hola! Soy ${name}. Tristemente ${attend} a los XV años de Montse. Les deseo un evento hermoso.`;
+                } else if (hasPases) {
+                    const count = document.getElementById('guestCount').value;
+                    if(!count) {
+                        alert("Por favor selecciona cuántas personas asistirán.");
+                        return;
+                    }
+                    text = `¡Hola! Soy ${name}. Confirmo que ${attend} a los XV años de Montse. Seremos ${count} personas en total.`;
+                } else {
+                    // Si confirma asistencia pero no tiene pases en el URL
+                    text = `¡Hola! Soy ${name}. Confirmo que ${attend} a los XV años de Montse.`;
+                }
             }
 
             const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
