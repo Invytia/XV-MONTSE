@@ -181,6 +181,53 @@
             font-weight: 600; transform: scale(1.1);
         }
 
+        /* --- DISEÑO DEL BOLETO / TICKET DE PASE --- */
+        .ticket-container {
+            display: none; /* Controlado por JS */
+            justify-content: center;
+            margin: 15px auto 35px;
+            /* La sombra se aplica al contenedor para bordear los cortes transparentes */
+            filter: drop-shadow(0 8px 15px rgba(193, 163, 127, 0.3)); 
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .ticket-left {
+            width: 70%;
+            height: 95px;
+            /* Corte circular transparente a la derecha */
+            background: radial-gradient(circle at right, transparent 12px, rgba(255, 255, 255, 0.95) 13px);
+            border-radius: 12px 0 0 12px;
+            padding: 15px 10px 15px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: left;
+        }
+
+        .ticket-right {
+            width: 30%;
+            height: 95px;
+            /* Corte circular transparente a la izquierda + fondo crema */
+            background: radial-gradient(circle at left, transparent 12px, rgba(245, 235, 208, 0.95) 13px);
+            border-radius: 0 12px 12px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Línea punteada dorada separadora del boleto */
+        .ticket-right::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 15px;
+            bottom: 15px;
+            border-left: 2px dashed rgba(193, 163, 127, 0.6); /* Dorado */
+        }
+
         /* --- FORMULARIOS Y BOTONES --- */
         input, select, textarea {
             width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px;
@@ -393,7 +440,6 @@
                         <i class="fa-solid fa-envelope-open-text" style="font-size: 2.2rem; color: var(--dorado); margin-bottom: 15px;"></i>
                         <h3 style="font-family: var(--fuente-titulos); font-size: 1.5rem; color: var(--verde-sofisticado);">Mesa de Regalos</h3>
                         <p style="font-weight: 600; letter-spacing: 2px; margin-top: 15px; color: var(--malva); font-size: 1rem;">LLUVIA DE SOBRES</p>
-                        <!-- TEXTO DE LLUVIA DE SOBRES ACTUALIZADO -->
                         <p style="margin-top: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--verde-sofisticado);">Tu presencia es el mejor regalo. Si deseas obsequiarme algo, ¡una lluvia de sobres será bienvenida!</p>
                     </div>
                 </div>
@@ -406,10 +452,18 @@
                     
                     <div style="max-width: 450px; margin: 0 auto;">
                         
-                        <!-- UI DEL PASE (Se oculta por defecto) -->
-                        <div id="passBadge" style="display: none; background: rgba(255, 255, 255, 0.7); border: 1px solid var(--dorado); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(193,163,127,0.2);">
-                            <p style="font-family: var(--fuente-titulos); font-size: 1.2rem; color: var(--verde-sofisticado); margin-bottom: 5px;"><i class="fa-solid fa-ticket" style="color: var(--dorado);"></i> Pase de Recepción</p>
-                            <p style="font-weight: 600; color: var(--malva); font-size: 1rem;">Tienes <span id="passCountDisplay" style="font-size: 1.2rem;">0</span> pases asignados</p>
+                        <!-- UI DEL BOLETO VIP (Se oculta por defecto y usa flex cuando está activo) -->
+                        <div id="ticketContainer" class="ticket-container">
+                            <div class="ticket-left">
+                                <p style="font-family: var(--fuente-titulos); font-size: 1.4rem; color: var(--verde-sofisticado); margin-bottom: 3px; line-height: 1.1;">
+                                    <i class="fa-solid fa-ticket" style="color: var(--dorado); margin-right: 8px;"></i>Pase VIP
+                                </p>
+                                <p style="font-family: var(--fuente-texto); font-size: 0.75rem; color: var(--malva); font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">Recepción</p>
+                            </div>
+                            <div class="ticket-right">
+                                <span id="passCountDisplay" style="font-family: var(--fuente-titulos); font-size: 2.8rem; color: var(--dorado); font-weight: 600; line-height: 1;">0</span>
+                                <span style="font-size: 0.75rem; color: var(--verde-sofisticado); font-weight: 600; text-transform: uppercase; margin-top: 4px; letter-spacing: 1px;">Pases</span>
+                            </div>
                         </div>
                         
                         <p style="margin-bottom: 25px; font-size: 1rem; font-weight: 500;">Confirma tu asistencia directamente por WhatsApp</p>
@@ -458,13 +512,14 @@
             const urlParams = new URLSearchParams(window.location.search);
             const pasesStr = urlParams.get('p');
             const guestCountSelect = document.getElementById('guestCount');
-            const passBadge = document.getElementById('passBadge');
+            const ticketContainer = document.getElementById('ticketContainer');
             const passCountDisplay = document.getElementById('passCountDisplay');
 
             if (pasesStr && !isNaN(pasesStr) && parseInt(pasesStr) > 0) {
                 const maxPases = parseInt(pasesStr);
                 
-                passBadge.style.display = 'block';
+                // Usamos 'flex' para mantener la estructura unida del ticket CSS
+                ticketContainer.style.display = 'flex';
                 guestCountSelect.style.display = 'block';
                 passCountDisplay.innerText = maxPases;
 
@@ -477,7 +532,7 @@
                     guestCountSelect.appendChild(option);
                 }
             } else {
-                passBadge.style.display = 'none';
+                ticketContainer.style.display = 'none';
                 guestCountSelect.style.display = 'none';
             }
         });
